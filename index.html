@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; worker-src 'self' blob:; style-src 'self'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="An unofficial companion for Foldit players: see which physical energy term each move changed, and why. Runs entirely in your browser.">
+<title>Move energetics for Foldit players</title>
+<link rel="icon" href="data:,"><link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head><body>
+<header>
+  <h1>Move energetics for Foldit players</h1>
+  <p>Unofficial companion · runs in your browser, uploads nothing</p>
+</header>
+<p class="beta"><strong>Beta:</strong> the capture recipe has been tested on a simulated Foldit, not yet in the game. Try it on a small puzzle first.</p>
+<main>
+<nav>
+  <h2>Connect Foldit</h2>
+  <ol>
+    <li>Put the recipe into a new Lua recipe in Foldit.
+      <div class="buttons"><button id="copy">Copy recipe</button><button id="save-recipe">Download</button></div>
+      <details id="recipe-box"><summary>Read the recipe</summary><textarea id="recipe" readonly rows="10" spellcheck="false" aria-label="Recipe source"></textarea></details>
+    </li>
+    <li>Run it once for a baseline, then after each move.</li>
+    <li>Select <code>scriptlog.default.xml</code> in your Foldit folder (often <code>C:\Foldit</code>).
+      <div class="buttons"><button id="follow" hidden>Follow the log live</button><button id="reconnect" hidden>Reconnect</button></div>
+      <p id="no-follow" class="muted" hidden>This browser cannot follow a file live (Chrome and Edge on desktop can). Choose the log again after each capture.</p>
+      <label>Read a log once <input id="log-file" type="file" accept=".xml,.txt" multiple></label>
+      <p id="connection" class="muted"></p>
+    </li>
+  </ol>
+  <p id="message" role="status"></p>
+  <p id="progress" class="muted"></p>
+  <h2>Challenges</h2>
+  <div id="challenges"></div>
+  <button id="demo">Show an example</button>
+  <details><summary>Paste recipe output</summary>
+    <form id="paste"><textarea name="text" required rows="5" aria-label="Recipe output"></textarea><button>Analyse</button></form>
+  </details>
+  <details><summary>Upload a PDB</summary>
+    <form id="upload">
+      <label>Challenge <input name="challenge" required maxlength="120"></label>
+      <label>Move <input name="move" maxlength="120"></label>
+      <input name="file" type="file" required aria-label="PDB file"><button>Analyse</button>
+    </form>
+  </details>
+  <details><summary>Back up or move your history</summary>
+    <button id="export">Export</button>
+    <label>Import <input id="import" type="file" accept=".json"></label>
+  </details>
+</nav>
+<article>
+  <section id="intro">
+    <h2>Why did that move cost energy?</h2>
+    <p>Each time you capture a move, this page splits the energy change into bond, angle, torsion, repulsion, dispersion, electrostatic and solvation terms. It then names the residues and atoms responsible and sets the result beside Foldit’s own score.</p>
+    <p>Every puzzle gets its own history. Press <em>Show an example</em> to see it without Foldit.</p>
+  </section>
+  <div id="view" hidden></div>
+</article>
+</main>
+<footer>
+  <p><strong>Privacy.</strong> Your captures and history stay in this browser. Clearing site data erases them.</p>
+  <p><strong>Fair play.</strong> Don’t pass captures or exports of active puzzles to other players. Follow the <a href="https://fold.it/community_rules" rel="noreferrer">Foldit community rules</a>.</p>
+  <p><strong>What the numbers are.</strong> Amber ff14SB + GBn2 potential energies of static structures: not free energies and not Foldit’s Rosetta score. “Disagree” means the two functions differ, not that either is wrong. Proteins of 11–450 residues (about 4 s at 76 residues, 30 s at 150, 5 minutes at 430); ligands, nucleic acids and symmetry partners are not modelled.</p>
+  <p>Not affiliated with or endorsed by Foldit or the University of Washington. <a href="NOTICE.txt">Sources and licences</a></p>
+</footer>
+</body></html>

@@ -1,0 +1,60 @@
+:root{--ground:#EDEFF2;--deep:#E3E7EC;--ink:#14181F;--slate:#4f5968;--rule:#C7CDD6;--down:#1F44D8;--up:#c93a3a;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--ground:#171b21;--deep:#20262e;--ink:#eef1f5;--slate:#a7b0bd;--rule:#39424e;--down:#3987e5;--up:#e66767;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+header{padding:12px 20px;border-bottom:1px solid var(--rule);display:flex;gap:4px 20px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:18px 0 6px}
+header p,.muted{color:var(--slate);margin:0;overflow-wrap:anywhere}
+main{display:grid;grid-template-columns:270px minmax(0,1fr)}
+nav{padding:0 16px 20px;border-right:1px solid var(--rule)}
+article{padding:0 20px 30px;min-width:0}
+button,input,textarea,select{font:inherit;max-width:100%}
+.challenge{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;padding:7px 8px;cursor:pointer;overflow-wrap:anywhere}
+.challenge[aria-current=true]{background:var(--deep);font-weight:600}
+.challenge small{display:block;color:var(--slate);font-weight:400}
+details{border-top:1px solid var(--rule);padding:9px 0}ol{padding-left:20px}
+form label,form input,form textarea,form button{display:block;width:100%;margin-top:6px}
+a{color:var(--down)}
+.tiles{display:flex;gap:10px 28px;flex-wrap:wrap;margin:14px 0}
+.tiles b{display:block;font-size:21px}.tiles span{color:var(--slate);font-size:13px}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 24px}
+figure{margin:10px 0}figcaption{font-size:13px;color:var(--slate)}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg .line{fill:none;stroke:var(--down);stroke-width:2}
+svg .dot{fill:var(--down);stroke:var(--ground);stroke-width:2}
+svg .dot.selected{fill:var(--ink)}
+svg .hit{fill:transparent;cursor:pointer}
+svg .grid{stroke:var(--rule)}svg text{fill:var(--slate);font-size:11px}
+.readout{min-height:19px;font-size:12px;color:var(--slate)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.pick{cursor:pointer}tr.selected{background:var(--deep)}
+td button{border:0;background:none;color:var(--down);cursor:pointer;padding:0}
+td.bar{width:34%;min-width:120px}
+.track{position:relative;height:14px}
+.track:after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--slate)}
+.fill{height:14px}
+.warn{border-left:3px solid var(--up);padding:4px 10px;background:var(--deep)}
+pre{background:var(--deep);padding:12px;overflow-x:auto;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:720px){main{display:block}nav{border:0;border-bottom:1px solid var(--rule)}}
+[hidden]{display:none!important}
+main{grid-template-columns:310px minmax(0,1fr);min-height:60vh}
+.beta{margin:0;padding:7px 20px;background:var(--deep);border-bottom:1px solid var(--rule);font-size:13px}
+.buttons{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+nav ol li{margin-bottom:8px;overflow-wrap:anywhere}
+nav label{display:block}nav input[type=file]{width:100%}
+nav textarea{width:100%}#recipe{font:11px/1.4 ui-monospace,monospace}
+#demo{margin:6px 0 12px}
+#intro{max-width:62ch}
+.title{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.title h2{overflow-wrap:anywhere;min-width:0}.title button{font-size:12px}
+h3{font-size:15px;margin:18px 0 4px}
+.equation{font-family:ui-monospace,monospace;margin:0 0 8px}
+.cause{margin:10px 0}.cause ul{margin:3px 0;padding-left:20px;font-size:13px;overflow-wrap:anywhere}
+.fill.down{background:var(--down);border-radius:4px 0 0 4px}
+.fill.up{background:var(--up);border-radius:0 4px 4px 0}
+footer{border-top:1px solid var(--rule);padding:8px 20px;font-size:12px;color:var(--slate)}
+footer p{max-width:100ch;margin:5px 0}
+@media(max-width:720px){main{display:block}}

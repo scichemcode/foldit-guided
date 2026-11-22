@@ -12,32 +12,20 @@
   <h1>Move energetics for Foldit players</h1>
   <p>Unofficial companion · runs in your browser, uploads nothing</p>
 </header>
-<p class="beta"><strong>Beta:</strong> the capture recipe has been tested on a simulated Foldit, not yet in the game. Try it on a small puzzle first.</p>
+<p class="beta"><strong>Beta:</strong> not yet tested inside the game, so names and places in Foldit may differ slightly. Start with a small puzzle.</p>
 <main>
 <nav>
-  <h2>Connect Foldit</h2>
-  <ol>
-    <li>Put the recipe into a new Lua recipe in Foldit.
-      <div class="buttons"><button id="copy">Copy recipe</button><button id="save-recipe">Download</button></div>
-      <details id="recipe-box"><summary>Read the recipe</summary><textarea id="recipe" readonly rows="10" spellcheck="false" aria-label="Recipe source"></textarea></details>
-    </li>
-    <li>Run it once for a baseline, then after each move.</li>
-    <li>Select <code>scriptlog.default.xml</code> in your Foldit folder (often <code>C:\Foldit</code>).
-      <div class="buttons"><button id="follow" hidden>Follow the log live</button><button id="reconnect" hidden>Reconnect</button></div>
-      <p id="no-follow" class="muted" hidden>This browser cannot follow a file live (Chrome and Edge on desktop can). Choose the log again after each capture.</p>
-      <label>Read a log once <input id="log-file" type="file" accept=".xml,.txt" multiple></label>
-      <p id="connection" class="muted"></p>
-    </li>
-  </ol>
-  <p id="message" role="status"></p>
-  <p id="progress" class="muted"></p>
-  <h2>Challenges</h2>
+  <div class="buttons top">
+    <button id="show-guide">Step-by-step guide</button>
+    <button id="demo">Show an example</button>
+  </div>
+  <p id="connection" class="muted">Not connected to Foldit yet.</p>
+  <button id="reconnect" hidden>Reconnect to the log</button>
+  <h2>Your puzzles</h2>
+  <p id="no-challenges" class="muted">They appear here after your first capture.</p>
   <div id="challenges"></div>
-  <button id="demo">Show an example</button>
-  <details><summary>Paste recipe output</summary>
-    <form id="paste"><textarea name="text" required rows="5" aria-label="Recipe output"></textarea><button>Analyse</button></form>
-  </details>
-  <details><summary>Upload a PDB</summary>
+  <details><summary>Upload a PDB instead</summary>
+    <p class="muted">For structures from outside Foldit. Use the same challenge name each time to compare them.</p>
     <form id="upload">
       <label>Challenge <input name="challenge" required maxlength="120"></label>
       <label>Move <input name="move" maxlength="120"></label>
@@ -50,18 +38,136 @@
   </details>
 </nav>
 <article>
-  <section id="intro">
-    <h2>Why did that move cost energy?</h2>
-    <p>Each time you capture a move, this page splits the energy change into bond, angle, torsion, repulsion, dispersion, electrostatic and solvation terms. It then names the residues and atoms responsible and sets the result beside Foldit’s own score.</p>
-    <p>Every puzzle gets its own history. Press <em>Show an example</em> to see it without Foldit.</p>
-  </section>
-  <div id="view" hidden></div>
+<section id="guide">
+  <h2>Find out why a Foldit move helped or hurt</h2>
+  <p>A <em>capture</em> is a snapshot of your protein. Take one before a move and one after, and this page tells you in plain words what changed, where, and what you could try.</p>
+  <p class="try">New here? <button id="demo-guide">See an example first</button> It takes a few seconds and doesn’t need Foldit.</p>
+
+  <h3>Before you start, you need</h3>
+  <ul id="needs">
+    <li><strong>Foldit on a computer</strong>, with this page open on the same computer.</li>
+    <li><strong>A puzzle that allows recipes.</strong> The Intro Puzzles don’t, so pick a Beginner or Science puzzle with 11 to 450 segments. Under 100 is quickest.</li>
+    <li><strong>Chrome or Edge</strong>, so the page updates by itself. Other browsers work, with one extra click per capture.</li>
+  </ul>
+
+  <h3>Set up once, in four steps</h3>
+  <p id="step-count" class="muted"></p>
+  <ol id="walkthrough">
+    <li><details class="step" data-step="1" open>
+      <summary><span class="number">1</span><span class="name">Download the capture recipe</span><span class="state"></span></summary>
+      <div class="body">
+        <p>A recipe is a small script that Foldit can run. This one only measures your protein. It does not move it.</p>
+        <p><button id="save-recipe" class="primary">Download the recipe</button></p>
+        <p class="expect"><strong>You should get</strong> a file named <code>foldit-energy-capture.lua</code>, usually in your Downloads folder. There is no need to open it.</p>
+        <details id="recipe-box"><summary>See or copy what is inside</summary>
+          <textarea id="recipe" readonly rows="10" spellcheck="false" aria-label="Recipe source"></textarea>
+          <button id="copy">Copy recipe</button>
+        </details>
+      </div>
+    </details></li>
+
+    <li><details class="step" data-step="2">
+      <summary><span class="number">2</span><span class="name">Take your first capture in Foldit</span><span class="state"></span></summary>
+      <div class="body">
+        <ol class="actions">
+          <li>In Foldit, open your puzzle.</li>
+          <li>Open the <strong>Cookbook</strong>, where recipes are kept.</li>
+          <li>At the bottom of the Cookbook, click <strong>Load local recipe</strong> (the folder icon).</li>
+          <li>Choose <code>foldit-energy-capture.lua</code>.</li>
+          <li>A small box opens. Click <strong>Capture</strong>.</li>
+          <li>Don’t move the protein until it finishes. Brief flickering bands are normal.</li>
+        </ol>
+        <p class="expect"><strong>You should see</strong> “Capture finished” in the recipe output (the <em>Show recipe output</em> icon, also at the bottom of the Cookbook).</p>
+        <p><button id="captured" class="primary">It finished, next step</button></p>
+      </div>
+    </details></li>
+
+    <li><details class="step" data-step="3">
+      <summary><span class="number">3</span><span class="name">Connect this page to Foldit</span><span class="state"></span></summary>
+      <div class="body">
+        <p>Foldit writes what a recipe prints into a file called the <em>script log</em>. You only have to show this page where that file is.</p>
+        <label class="inline">My computer is
+          <select id="system">
+            <option value="windows">Windows</option>
+            <option value="mac">a Mac</option>
+            <option value="linux">Linux</option>
+          </select>
+        </label>
+        <ol class="actions">
+          <li data-os="windows">Copy this usual location:
+            <span class="path"><code>C:\Foldit\scriptlog.default.xml</code><button data-copy="C:\Foldit\scriptlog.default.xml">Copy</button></span></li>
+          <li data-os="mac">Copy this usual folder:
+            <span class="path"><code>/Applications/Foldit.app/Contents/Resources</code><button data-copy="/Applications/Foldit.app/Contents/Resources">Copy</button></span></li>
+          <li data-os="linux">Find the folder you start Foldit from.</li>
+          <li class="can-follow">Click <strong>Choose the script log</strong> below.</li>
+          <li class="cannot-follow">Click the file button below.</li>
+          <li data-os="windows">Paste into the <em>File name</em> box and click <strong>Open</strong>.</li>
+          <li data-os="mac">Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>, paste, press Return, then pick <code>scriptlog.default.xml</code> or <code>scriptlog..xml</code>.</li>
+          <li data-os="linux">Pick <code>scriptlog.default.xml</code> in that folder.</li>
+          <li class="can-follow">If the browser asks for permission to view the file, allow it.</li>
+        </ol>
+        <p class="can-follow"><button id="follow" class="primary">Choose the script log</button></p>
+        <p class="cannot-follow warn">This browser can’t update by itself. Choose the file again after <strong>every</strong> capture, because Foldit replaces it each time.</p>
+        <label class="file"><span class="can-follow">Button not working? Read the file once:</span><span class="cannot-follow">Script log:</span>
+          <input id="log-file" type="file" accept=".xml,.txt" multiple></label>
+        <p class="expect"><strong>You should see</strong> your puzzle’s name under <em>Your puzzles</em>, with one step.</p>
+        <details><summary>I can’t find the file</summary>
+          <ul>
+            <li>It only exists after a recipe has run, so finish step 2 first.</li>
+            <li>It is in the folder Foldit was installed in or started from. Search your computer for <code>scriptlog</code>.</li>
+            <li>If you use tracks, the track’s name replaces <code>default</code> in the file name.</li>
+            <li>You can skip the file: copy everything from Foldit’s recipe output and paste it here after each capture.</li>
+          </ul>
+          <form id="paste"><textarea name="text" required rows="4" aria-label="Recipe output"></textarea><button>Analyse pasted output</button></form>
+        </details>
+      </div>
+    </details></li>
+
+    <li><details class="step" data-step="4">
+      <summary><span class="number">4</span><span class="name">Make one move and capture again</span><span class="state"></span></summary>
+      <div class="body">
+        <ol class="actions">
+          <li>In Foldit, make <strong>one</strong> move, for example Shake, Wiggle or a pull.</li>
+          <li>Run the recipe again, the same way as in step 2.</li>
+          <li>If you like, type what you did in the <strong>Move</strong> box. Then click <strong>Capture</strong>.</li>
+          <li class="can-follow">Come back to this page.</li>
+          <li class="cannot-follow">Come back here and choose the script log again (step 3).</li>
+        </ol>
+        <p class="expect"><strong>You should see</strong> a sentence such as “This move made the energy worse”, with the main reason under it.</p>
+      </div>
+    </details></li>
+  </ol>
+
+  <div id="routine">
+    <h3>From then on, repeat three things</h3>
+    <ol><li><strong>Move</strong> once in Foldit</li><li><strong>Capture</strong> with the recipe</li><li><strong>Read</strong> the reason here</li></ol>
+    <p class="muted">Keep this page open while you play. Foldit keeps only the latest recipe run in its log, so a capture taken while the page is closed can be lost.</p>
+  </div>
+
+  <h3>If something doesn’t work</h3>
+  <div id="help">
+    <details><summary>I can’t find the Cookbook, or recipes are unavailable</summary>
+      <p>You are probably in an Intro Puzzle, where there is no Cookbook. Open a Beginner or Science puzzle.</p></details>
+    <details><summary>The recipe seems stuck</summary>
+      <p>It prints its progress in the recipe output. Bigger proteins take longer. If you cancel, the temporary bands are removed; just run it again.</p></details>
+    <details><summary>The page says there is no capture in the file</summary>
+      <p>Either another recipe ran afterwards and replaced the log, or this is another track’s log. Run the capture recipe again, then look at the newest <code>scriptlog</code> file.</p></details>
+    <details><summary>Nothing new appears after a capture</summary>
+      <p>Look under the guide button for “Connected”. If it says access expired, press Reconnect. Without Chrome or Edge, choose the file again after every capture.</p></details>
+    <details><summary>The analysis is slow</summary>
+      <p>Expect about 4 seconds at 76 segments, 30 seconds at 150 and 5 minutes at 430. You can keep playing meanwhile.</p></details>
+    <details><summary>A step says “failed”</summary>
+      <p>Click that step to read the reason. A message about bond lengths or atom numbering is a fault in this tool: please <a href="https://github.com/scichemcode/foldit-guided/issues" rel="noreferrer">report it</a>, without attaching solutions of active puzzles.</p></details>
+  </div>
+</section>
+<div id="view" hidden></div>
 </article>
 </main>
+<div id="status" role="status"><span id="message"></span> <span id="progress"></span></div>
 <footer>
   <p><strong>Privacy.</strong> Your captures and history stay in this browser. Clearing site data erases them.</p>
   <p><strong>Fair play.</strong> Don’t pass captures or exports of active puzzles to other players. Follow the <a href="https://fold.it/community_rules" rel="noreferrer">Foldit community rules</a>.</p>
-  <p><strong>What the numbers are.</strong> Amber ff14SB + GBn2 potential energies of static structures: not free energies and not Foldit’s Rosetta score. “Disagree” means the two functions differ, not that either is wrong. Proteins of 11–450 residues (about 4 s at 76 residues, 30 s at 150, 5 minutes at 430); ligands, nucleic acids and symmetry partners are not modelled.</p>
+  <p><strong>What the numbers are.</strong> Amber ff14SB + GBn2 potential energies of static structures: not free energies and not Foldit’s Rosetta score. Proteins of 11–450 residues; ligands, nucleic acids and symmetry partners are not modelled.</p>
   <p>Not affiliated with or endorsed by Foldit or the University of Washington. <a href="NOTICE.txt">Sources and licences</a></p>
 </footer>
 </body></html>

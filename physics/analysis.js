@@ -5,13 +5,27 @@ import { relaxHydrogens } from './minimize.js';
 import { residueSasa } from './sasa.js';
 
 export const TERMS = [
-  { key: 'bond', label: 'Bond stretch', equation: '½ k_b (r − r₀)²', foldit: 'Ideality', hint: "'Ideality': stretched bond, usually from pulling with bands." },
-  { key: 'angle', label: 'Angle bend', equation: '½ k_θ (θ − θ₀)²', foldit: 'Ideality', hint: "'Ideality': distorted geometry, often after a forced Rebuild or band pull." },
-  { key: 'torsion', label: 'Torsion', equation: 'Σ k_φ [1 + cos(nφ − δ)]', foldit: 'Backbone / Sidechain', hint: "'Backbone' / 'Sidechain': strained dihedral. Wiggle Backbone or Shake." },
-  { key: 'lj_rep', label: 'LJ repulsion', equation: '4ε (σ/r)¹²', foldit: 'Clashing', hint: "'Clashing': try Shake or Wiggle Sidechains." },
-  { key: 'lj_disp', label: 'LJ dispersion', equation: '−4ε (σ/r)⁶', foldit: 'Packing', hint: "'Packing': the core may have voids. Wiggle or Shake to re-pack." },
-  { key: 'coulomb', label: 'Coulomb', equation: 'q_i q_j / (4πε₀ r)', foldit: 'Bonding', hint: "'Bonding': look for lost H-bonds or broken salt bridges." },
-  { key: 'gb_solv', label: 'GB solvation', equation: 'ΔG_pol (GBn2) + ΔG_np (SA)', foldit: 'Hiding', hint: "'Hiding': hydrophobics exposed or charges buried." },
+  { key: 'bond', plain: 'Stretched bonds', worse: 'Bonds were stretched or squeezed', better: 'Bond lengths are closer to normal',
+    tip: 'Run Idealize on that area, or loosen any bands pulling on it.',
+    label: 'Bond stretch', equation: '½ k_b (r − r₀)²', foldit: 'Ideality', hint: "'Ideality': stretched bond, usually from pulling with bands." },
+  { key: 'angle', plain: 'Bent bond angles', worse: 'Bond angles were bent out of shape', better: 'Bond angles are closer to normal',
+    tip: 'Wiggle that area, or loosen any bands pulling on it.',
+    label: 'Angle bend', equation: '½ k_θ (θ − θ₀)²', foldit: 'Ideality', hint: "'Ideality': distorted geometry, often after a forced Rebuild or band pull." },
+  { key: 'torsion', plain: 'Awkward twists', worse: 'The chain or a side chain was twisted awkwardly', better: 'Twists in the chain are more comfortable',
+    tip: 'Wiggle the backbone there, or Shake the side chains.',
+    label: 'Torsion', equation: 'Σ k_φ [1 + cos(nφ − δ)]', foldit: 'Backbone / Sidechain', hint: "'Backbone' / 'Sidechain': strained dihedral. Wiggle Backbone or Shake." },
+  { key: 'lj_rep', plain: 'Clashes', worse: 'Atoms were pushed too close together', better: 'Clashes between atoms were relieved',
+    tip: 'Shake, then Wiggle, around that spot.',
+    label: 'LJ repulsion', equation: '4ε (σ/r)¹²', foldit: 'Clashing', hint: "'Clashing': try Shake or Wiggle Sidechains." },
+  { key: 'lj_disp', plain: 'Packing', worse: 'Packing became looser', better: 'The protein packs more tightly',
+    tip: 'Bring those parts closer, then Shake and Wiggle to fill the gap.',
+    label: 'LJ dispersion', equation: '−4ε (σ/r)⁶', foldit: 'Packing', hint: "'Packing': the core may have voids. Wiggle or Shake to re-pack." },
+  { key: 'coulomb', plain: 'Attraction of charges', worse: 'Favourable attractions between charges, such as hydrogen bonds, got weaker', better: 'Attractions between charges, such as hydrogen bonds, got stronger',
+    tip: 'Look for a broken hydrogen bond or salt bridge there and restore it.',
+    label: 'Coulomb', equation: 'q_i q_j / (4πε₀ r)', foldit: 'Bonding', hint: "'Bonding': look for lost H-bonds or broken salt bridges." },
+  { key: 'gb_solv', plain: 'Contact with water', worse: 'Contact with the surrounding water became less favourable', better: 'Contact with the surrounding water became more favourable',
+    tip: 'Turn greasy (orange) side chains inward and charged (blue) ones outward.',
+    label: 'GB solvation', equation: 'ΔG_pol (GBn2) + ΔG_np (SA)', foldit: 'Hiding', hint: "'Hiding': hydrophobics exposed or charges buried." },
 ];
 const KCAL = 1 / 4.184;
 const CHARGE = { ASP: -1, GLU: -1, LYS: 1, ARG: 1 };
@@ -46,6 +60,7 @@ export function compare(before, after) {
   if (worst.key === 'gb_solv') out.causes = solvationCauses(A, B);
   else if (['bond', 'angle', 'torsion'].includes(worst.key)) out.causes = bondedCauses(A, B, worst.key);
   else out.causes = pairCauses(A, B, worst.key);
+  if (worst.key !== 'gb_solv' && out.causes.length) out.where = out.causes[0].where;
   return out;
 }
 
@@ -88,7 +103,7 @@ function pairCauses(A, B, key) {
   return top.map(([v, k]) => {
     const ri = Math.floor(k / R), rj = k % R;
     const title = ri === rj ? B.resLabels[ri] : `${B.resLabels[ri]}–${B.resLabels[rj]}`;
-    return { title: `${title}: ${signed(v * KCAL)} kcal/mol`, notes: explainPair(A, B, key, ri, rj) };
+    return { where: title, title: `${title}: ${signed(v * KCAL)} kcal/mol`, notes: explainPair(A, B, key, ri, rj) };
   });
 }
 
@@ -156,7 +171,7 @@ function bondedCauses(A, B, key) {
     rows = [...grouped.values()].map(g => ({ ...g, note: `φ ${deg(g.a)}° → ${deg(g.b)}° (${g.series.join('; ')})` }));
   }
   return rows.filter(r => r.rise > 0).sort((a, b) => b.rise - a.rise).slice(0, 3).map(({ t, rise, note }) =>
-    ({ title: `${B.resLabels[B.atomRes[t[1]]]} ${atoms(t)}: ${signed(rise * KCAL)} kcal/mol`, notes: [note] }));
+    ({ where: B.resLabels[B.atomRes[t[1]]], title: `${B.resLabels[B.atomRes[t[1]]]} ${atoms(t)}: ${signed(rise * KCAL)} kcal/mol`, notes: [note] }));
 }
 
 function solvationCauses(A, B) {

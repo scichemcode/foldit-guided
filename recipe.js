@@ -1,6 +1,6 @@
 // The Foldit recipe. Kept as a module so the page needs no network request to copy it.
 export default String.raw`
--- Foldit move energetics: run once after each move (paste into a new Lua recipe).
+-- Foldit move energetics: run once after each move (Cookbook > Load local recipe).
 -- Read-only with respect to the protein: no atom is moved. It measures atom-to-anchor
 -- distances with temporary disabled bands, deletes them, and prints the result.
 
@@ -37,10 +37,15 @@ end
 
 local function main()
   local ask = dialog.CreateDialog("Capture for energy analysis")
+  ask.about = dialog.AddLabel("Takes a snapshot for the energy page. Does not move the protein.")
   ask.move = dialog.AddTextbox("Move", "")
+  ask.hint = dialog.AddLabel("Move is optional: what you just did, e.g. shake")
   ask.ok = dialog.AddButton("Capture", 1)
   ask.cancel = dialog.AddButton("Cancel", 0)
-  if dialog.Show(ask) ~= 1 then return end
+  if dialog.Show(ask) ~= 1 then
+    print("Capture cancelled. Nothing was recorded.")
+    return
+  end
 
   local protein, skipped = {}, 0
   for i = 1, structure.GetCount() do
@@ -92,7 +97,8 @@ local function main()
   end
 
   local count = 0
-  for _, p in ipairs(protein) do
+  local reported = 0
+  for index, p in ipairs(protein) do
     -- One atom past the heavy atoms, because a chain end carries an extra OXT.
     for a = 1, math.min(HEAVY[p.aa] + 1, structure.GetAtomCount(p.seg)) do
       local row = {}
@@ -100,10 +106,16 @@ local function main()
       print("FEX1|ATOM|" .. p.seg .. "|" .. p.aa .. "|" .. a .. "|" .. table.concat(row, ","))
       count = count + 1
     end
+    local percent = math.floor(index * 100 / n)
+    if percent < 100 and percent >= reported + 20 then
+      reported = percent
+      print("Capturing: " .. percent .. "%")
+    end
   end
 
   print("FEX1|END|" .. count)
   cleanup()
+  print("Capture finished. Go back to the web page.")
 end
 
 xpcall(main, cleanup)

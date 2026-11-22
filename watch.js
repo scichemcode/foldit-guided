@@ -4,27 +4,43 @@ import { getSetting, setSetting } from './store.js';
 const INTERVAL = 2000;
 export const canFollow = 'showOpenFilePicker' in window;
 
-let handle = null, stamp = '', timer = null;
+let handle = null, stamp = '', ticker = null;
+
+// Foldit usually covers the browser, and hidden pages may get one timer tick a minute. Foldit also
+// overwrites the log on every run, so a slow poll loses captures. Worker timers keep their pace.
+function startTicker(tick) {
+  const source = `setInterval(() => postMessage(0), ${INTERVAL});`;
+  const worker = new Worker(URL.createObjectURL(new Blob([source], { type: 'text/javascript' })));
+  worker.onmessage = tick;
+  return worker;
+}
 
 export function follow(chosen, onText, onState) {
-  clearTimeout(timer);
+  ticker?.terminate();
   handle = chosen;
   stamp = '';
+  let busy = false;
   const poll = async () => {
-    if (handle !== chosen) return;
+    if (handle !== chosen || busy) return;
+    busy = true;
     try {
       const file = await chosen.getFile(), now = `${file.lastModified}:${file.size}`;
       if (now !== stamp) {
         await onText(await file.text());
         stamp = now;
       }
-      onState(`Following ${chosen.name}`);
+      onState(`Connected to ${chosen.name}`);
     } catch (error) {
-      if (error.name === 'NotAllowedError') return onState(`Access to ${chosen.name} expired: press Reconnect`, true);
+      if (error.name === 'NotAllowedError') {
+        ticker?.terminate();
+        return onState(`Access to ${chosen.name} expired: press Reconnect`, true);
+      }
       onState(`Waiting for ${chosen.name} (${error.message})`); // Foldit may be writing it
+    } finally {
+      busy = false;
     }
-    if (handle === chosen) timer = setTimeout(poll, INTERVAL);
   };
+  ticker = startTicker(poll);
   poll();
 }
 
